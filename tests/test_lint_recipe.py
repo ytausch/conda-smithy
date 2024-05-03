@@ -1,8 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-from collections import OrderedDict
-from contextlib import contextmanager
-import io
 import os
 import shutil
 import subprocess
@@ -10,6 +6,8 @@ import tempfile
 import textwrap
 import unittest
 import warnings
+from collections import OrderedDict
+from contextlib import contextmanager
 
 import github
 import pytest
@@ -38,7 +36,7 @@ def test_stdlib_hint(comp_lang):
     expected_message = "This recipe is using a compiler"
 
     with tmp_directory() as recipe_dir:
-        with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+        with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
             fh.write(
                 f"""
                 package:
@@ -58,7 +56,7 @@ def test_sysroot_hint():
     expected_message = "You're setting a requirement on sysroot"
 
     with tmp_directory() as recipe_dir:
-        with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+        with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
             fh.write(
                 """
                 package:
@@ -78,7 +76,7 @@ def test_osx_hint(where):
     expected_message = "You're setting a constraint on the `__osx` virtual"
 
     with tmp_directory() as recipe_dir:
-        with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+        with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
             fh.write(
                 f"""
                 package:
@@ -463,7 +461,7 @@ class Test_linter(unittest.TestCase):
             lints, hints = linter.lintify_meta_yaml({}, recipe_dir)
             self.assertIn(expected_message, lints)
 
-            with io.open(os.path.join(recipe_dir, "run_test.py"), "w") as fh:
+            with open(os.path.join(recipe_dir, "run_test.py"), "w") as fh:
                 fh.write("# foo")
             lints, hints = linter.lintify_meta_yaml({}, recipe_dir)
             self.assertNotIn(expected_message, lints)
@@ -476,7 +474,7 @@ class Test_linter(unittest.TestCase):
         )
 
         with tmp_directory() as recipe_dir:
-            with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+            with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                 fh.write(
                     """
                     package:
@@ -501,32 +499,30 @@ class Test_linter(unittest.TestCase):
         expected_message = (
             "Selectors are suggested to take a "
             "``<two spaces>#<one space>[<expression>]`` form."
-            " See lines {}".format([3])
+            f" See lines {[3]}"
         )
 
         with tmp_directory() as recipe_dir:
 
             def assert_selector(selector, is_good=True):
-                with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+                with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                     fh.write(
-                        """
+                        f"""
                             package:
                                name: foo_py2  # [py2k]
-                               {}
-                             """.format(
-                            selector
-                        )
+                               {selector}
+                             """
                     )
                 lints, hints = linter.lintify_meta_yaml({}, recipe_dir)
                 if is_good:
                     message = (
                         "Found lints when there shouldn't have been a "
-                        "lint for '{}'.".format(selector)
+                        f"lint for '{selector}'."
                     )
                 else:
                     message = (
-                        "Expecting lints for '{}', but didn't get any."
-                        "".format(selector)
+                        f"Expecting lints for '{selector}', but didn't get any."
+                        ""
                     )
                 self.assertEqual(
                     not is_good,
@@ -548,18 +544,16 @@ class Test_linter(unittest.TestCase):
                     expected_start = "Old-style Python selectors (py27, py34, py35, py36) are deprecated"
                 else:
                     expected_start = "Old-style Python selectors (py27, py35, etc) are only available"
-                with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+                with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                     fh.write(meta_string)
                 lints, hints = linter.main(recipe_dir, return_hints=True)
                 if is_good:
                     message = (
                         "Found lints or hints when there shouldn't have "
-                        "been for '{}'."
-                    ).format(meta_string)
+                        f"been for '{meta_string}'."
+                    )
                 else:
-                    message = (
-                        "Expected lints or hints for '{}', but didn't get any."
-                    ).format(meta_string)
+                    message = f"Expected lints or hints for '{meta_string}', but didn't get any."
                 problems = lints if kind == "lint" else hints
                 self.assertEqual(
                     not is_good,
@@ -658,18 +652,19 @@ class Test_linter(unittest.TestCase):
         with tmp_directory() as recipe_dir:
 
             def assert_noarch_selector(meta_string, is_good=False):
-                with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+                with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                     fh.write(meta_string)
                 lints = linter.main(recipe_dir)
                 if is_good:
                     message = (
                         "Found lints when there shouldn't have "
-                        "been a lint for '{}'."
-                    ).format(meta_string)
+                        f"been a lint for '{meta_string}'."
+                    )
                 else:
                     message = (
-                        "Expected lints for '{}', but didn't " "get any."
-                    ).format(meta_string)
+                        f"Expected lints for '{meta_string}', but didn't "
+                        "get any."
+                    )
                 self.assertEqual(
                     not is_good,
                     any(lint.startswith(expected_start) for lint in lints),
@@ -806,18 +801,19 @@ class Test_linter(unittest.TestCase):
         with tmp_directory() as recipe_dir:
 
             def assert_noarch_hint(meta_string, is_good=False):
-                with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+                with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                     fh.write(meta_string)
                 lints, hints = linter.main(recipe_dir, return_hints=True)
                 if is_good:
                     message = (
                         "Found hints when there shouldn't have "
-                        "been a lint for '{}'."
-                    ).format(meta_string)
+                        f"been a lint for '{meta_string}'."
+                    )
                 else:
                     message = (
-                        "Expected hints for '{}', but didn't " "get any."
-                    ).format(meta_string)
+                        f"Expected hints for '{meta_string}', but didn't "
+                        "get any."
+                    )
                 self.assertEqual(
                     not is_good,
                     any(lint.startswith(expected_start) for lint in hints),
@@ -877,7 +873,7 @@ class Test_linter(unittest.TestCase):
         # Test that we can use os.environ in a recipe. We don't care about
         # the results here.
         with tmp_directory() as recipe_dir:
-            with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+            with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                 fh.write(
                     """
                         {% set version = os.environ.get('WIBBLE') %}
@@ -892,14 +888,14 @@ class Test_linter(unittest.TestCase):
         # Test that we can use load_file_regex in a recipe. We don't care about
         # the results here.
         with tmp_directory() as recipe_dir:
-            with io.open(os.path.join(recipe_dir, "sha256"), "w") as fh:
+            with open(os.path.join(recipe_dir, "sha256"), "w") as fh:
                 fh.write(
                     """
                         d0e46ea5fca7d4c077245fe0b4195a828d9d4d69be8a0bd46233b2c12abd2098  iwftc_osx.zip
                         8ce4dc535b21484f65027be56263d8b0d9f58e57532614e1a8f6881f3b8fe260  iwftc_win.zip
                         """
                 )
-            with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+            with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                 fh.write(
                     """
                         {% set sha256_osx = load_file_regex(load_file="sha256",
@@ -918,7 +914,7 @@ class Test_linter(unittest.TestCase):
         # renders conda-build functions to just function stubs to pass the linting.
         # TODO: add *args and **kwargs for functions used to parse the file.
         with tmp_directory() as recipe_dir:
-            with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+            with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                 fh.write(
                     """
                         {% set data = load_file_data("IDONTNEED", from_recipe_dir=True, recipe_dir=".") %}
@@ -935,7 +931,7 @@ class Test_linter(unittest.TestCase):
         # renders conda-build functions to just function stubs to pass the linting.
         # TODO: add *args and **kwargs for functions used to parse the file.
         with tmp_directory() as recipe_dir:
-            with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+            with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                 fh.write(
                     """
                         {% set data = load_setup_py_data("IDONTNEED", from_recipe_dir=True, recipe_dir=".") %}
@@ -952,7 +948,7 @@ class Test_linter(unittest.TestCase):
         # renders conda-build functions to just function stubs to pass the linting.
         # TODO: add *args and **kwargs for functions used to parse the data.
         with tmp_directory() as recipe_dir:
-            with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+            with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                 fh.write(
                     """
                         {% set data = load_str_data("IDONTNEED", "json") %}
@@ -966,7 +962,7 @@ class Test_linter(unittest.TestCase):
     def test_jinja_os_sep(self):
         # Test that we can use os.sep in a recipe.
         with tmp_directory() as recipe_dir:
-            with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+            with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                 fh.write(
                     """
                         package:
@@ -982,7 +978,7 @@ class Test_linter(unittest.TestCase):
         # Test that we can use target_platform in a recipe. We don't care about
         # the results here.
         with tmp_directory() as recipe_dir:
-            with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+            with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                 fh.write(
                     """
                         package:
@@ -1222,17 +1218,17 @@ class Test_linter(unittest.TestCase):
             bad_contents + [valid_content], [0, 0, 0, 2, 2, 2, 3, 3, 3, 1]
         ):
             with tmp_directory() as recipe_dir:
-                with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as f:
+                with open(os.path.join(recipe_dir, "meta.yaml"), "w") as f:
                     f.write(content)
                 lints, hints = linter.lintify_meta_yaml(
                     {}, recipe_dir=recipe_dir
                 )
                 if lines > 1:
                     expected_message = (
-                        "There are {} too many lines.  "
+                        f"There are {lines - 1} too many lines.  "
                         "There should be one empty line "
                         "at the end of the "
-                        "file.".format(lines - 1)
+                        "file."
                     )
                 else:
                     expected_message = (
@@ -1301,7 +1297,7 @@ class Test_linter(unittest.TestCase):
         try:
             cf.get_repo("python1-feedstock")
             feedstock_exists = True
-        except github.UnknownObjectException as e:
+        except github.UnknownObjectException:
             feedstock_exists = False
 
         if feedstock_exists:
@@ -1324,12 +1320,10 @@ class Test_linter(unittest.TestCase):
         bio = gh.get_user("bioconda").get_repo("bioconda-recipes")
         r = "samtools"
         try:
-            bio.get_dir_contents("recipe/{}".format(r))
-        except github.UnknownObjectException as e:
+            bio.get_dir_contents(f"recipe/{r}")
+        except github.UnknownObjectException:
             warnings.warn(
-                "There's no bioconda recipe named {}, but tests assume that there is".format(
-                    r
-                )
+                f"There's no bioconda recipe named {r}, but tests assume that there is"
             )
         else:
             # Check that feedstock exists if staged_recipes
@@ -1360,17 +1354,15 @@ class Test_linter(unittest.TestCase):
 
         r = "this-will-never-exist"
         try:
-            bio.get_dir_contents("recipes/{}".format(r))
-        except github.UnknownObjectException as e:
+            bio.get_dir_contents(f"recipes/{r}")
+        except github.UnknownObjectException:
             lints, _ = linter.lintify_meta_yaml(
                 {"package": {"name": r}}, recipe_dir=r, conda_forge=True
             )
             self.assertNotIn(expected_message, lints)
         else:
             warnings.warn(
-                "There's a bioconda recipe named {}, but tests assume that there isn't".format(
-                    r
-                )
+                f"There's a bioconda recipe named {r}, but tests assume that there isn't"
             )
 
         expected_message = (
@@ -1524,8 +1516,8 @@ class Test_linter(unittest.TestCase):
         lints, hints = linter.lintify_meta_yaml({"source": url})
         msg = (
             'The "source" section was expected to be a dictionary or a '
-            "list, but got a {}.{}."
-        ).format(type(url).__module__, type(url).__name__)
+            f"list, but got a {type(url).__module__}.{type(url).__name__}."
+        )
         self.assertIn(msg, lints)
 
     def test_single_space_pins(self):
@@ -1671,7 +1663,7 @@ class Test_linter(unittest.TestCase):
 class TestCLI_recipe_lint(unittest.TestCase):
     def test_cli_fail(self):
         with tmp_directory() as recipe_dir:
-            with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+            with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                 fh.write(
                     textwrap.dedent(
                         """
@@ -1691,7 +1683,7 @@ class TestCLI_recipe_lint(unittest.TestCase):
 
     def test_cli_success(self):
         with tmp_directory() as recipe_dir:
-            with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+            with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                 fh.write(
                     textwrap.dedent(
                         """
@@ -1722,7 +1714,7 @@ class TestCLI_recipe_lint(unittest.TestCase):
 
     def test_cli_environ(self):
         with tmp_directory() as recipe_dir:
-            with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+            with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                 fh.write(
                     textwrap.dedent(
                         """
@@ -1758,8 +1750,8 @@ class TestCLI_recipe_lint(unittest.TestCase):
         Tests that unicode does not confuse the linter.
         """
         with tmp_directory() as recipe_dir:
-            with io.open(
-                os.path.join(recipe_dir, "meta.yaml"), "wt", encoding="utf-8"
+            with open(
+                os.path.join(recipe_dir, "meta.yaml"), "w", encoding="utf-8"
             ) as fh:
                 fh.write(
                     """
@@ -1780,34 +1772,32 @@ class TestCLI_recipe_lint(unittest.TestCase):
     def test_jinja_variable_def(self):
         expected_message = (
             "Jinja2 variable definitions are suggested to "
-            "take a ``{{%<one space>set<one space>"
+            "take a ``{%<one space>set<one space>"
             "<variable name><one space>=<one space>"
-            "<expression><one space>%}}`` form. See lines "
-            "{}".format([2])
+            "<expression><one space>%}`` form. See lines "
+            f"{[2]}"
         )
 
         with tmp_directory() as recipe_dir:
 
             def assert_jinja(jinja_var, is_good=True):
-                with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+                with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
                     fh.write(
-                        """
+                        f"""
                              {{% set name = "conda-smithy" %}}
-                             {}
-                             """.format(
-                            jinja_var
-                        )
+                             {jinja_var}
+                             """
                     )
                 lints, hints = linter.lintify_meta_yaml({}, recipe_dir)
                 if is_good:
                     message = (
                         "Found lints when there shouldn't have been a "
-                        "lint for '{}'.".format(jinja_var)
+                        f"lint for '{jinja_var}'."
                     )
                 else:
                     message = (
-                        "Expecting lints for '{}', but didn't get any."
-                        "".format(jinja_var)
+                        f"Expecting lints for '{jinja_var}', but didn't get any."
+                        ""
                     )
                 self.assertEqual(
                     not is_good,
