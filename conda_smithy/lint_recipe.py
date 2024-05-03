@@ -1,7 +1,3 @@
-from collections.abc import Mapping, Sequence
-
-str_type = str
-
 import copy
 import fnmatch
 import itertools
@@ -11,12 +7,15 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Mapping, Sequence
 from glob import glob
 from inspect import cleandoc
 from textwrap import indent
 
 import github
+import jsonschema
 import requests
+from conda.exceptions import InvalidVersionSpec
 
 if sys.version_info[:2] < (3, 11):
     import tomli as tomllib
@@ -25,7 +24,7 @@ else:
 
 from conda.models.version import VersionOrder
 from conda_build.metadata import (
-    FIELDS as cbfields,
+    FIELDS as _CONDA_BUILD_FIELDS,
 )
 from conda_build.metadata import (
     ensure_valid_license_family,
@@ -35,7 +34,10 @@ from conda_smithy.validate_schema import validate_json_schema
 
 from .utils import get_yaml, render_meta_yaml
 
-FIELDS = copy.deepcopy(cbfields)
+str_type = str
+
+
+FIELDS = copy.deepcopy(_CONDA_BUILD_FIELDS)
 
 # Just in case 'extra' moves into conda_build
 if "extra" not in FIELDS.keys():
@@ -60,7 +62,6 @@ REQUIREMENTS_ORDER = ["build", "host", "run"]
 
 TEST_KEYS = {"imports", "commands"}
 TEST_FILES = ["run_test.py", "run_test.sh", "run_test.bat", "run_test.pl"]
-
 
 NEEDED_FAMILIES = ["gpl", "bsd", "mit", "apache", "psf"]
 
@@ -108,7 +109,7 @@ def lint_section_order(major_sections, lints):
     )
     if major_sections != section_order_sorted:
         section_order_sorted_str = map(
-            lambda s: "'%s'" % s, section_order_sorted
+            lambda s: f"'{s}'", section_order_sorted
         )
         section_order_sorted_str = ", ".join(section_order_sorted_str)
         section_order_sorted_str = "[" + section_order_sorted_str + "]"
@@ -258,45 +259,46 @@ def lintify_meta_yaml(
     # 6: Selectors should be in a tidy form.
     if recipe_dir is not None and os.path.exists(meta_fname):
         bad_selectors, bad_lines = [], []
-        pyXY_selectors_lint, pyXY_lines_lint = [], []
-        pyXY_selectors_hint, pyXY_lines_hint = [], []
+        # pyXY selectors for python version X.Y
+        python_selectors_lint, python_lines_lint = [], []
+        python_selectors_hint, python_lines_hint = [], []
         # Good selectors look like ".*\s\s#\s[...]"
         good_selectors_pat = re.compile(r"(.+?)\s{2,}#\s\[(.+)\](?(2).*)$")
         # Look out for py27, py35 selectors; we prefer py==35
-        pyXY_selectors_pat = re.compile(r".+#\s*\[.*?(py\d{2,3}).*\]")
+        python_selectors_pat = re.compile(r".+#\s*\[.*?(py\d{2,3}).*\]")
         with open(meta_fname) as fh:
             for selector_line, line_number in selector_lines(fh):
                 if not good_selectors_pat.match(selector_line):
                     bad_selectors.append(selector_line)
                     bad_lines.append(line_number)
-                pyXY_matches = pyXY_selectors_pat.match(selector_line)
-                if pyXY_matches:
-                    for pyXY in pyXY_matches.groups():
-                        if int(pyXY[2:]) in (27, 34, 35, 36):
+                python_matches = python_selectors_pat.match(selector_line)
+                if python_matches:
+                    for py_match in python_matches.groups():
+                        if int(py_match[2:]) in (27, 34, 35, 36):
                             # py27, py35 and so on are ok up to py36 (included); only warn
-                            pyXY_selectors_hint.append(selector_line)
-                            pyXY_lines_hint.append(line_number)
+                            python_selectors_hint.append(selector_line)
+                            python_lines_hint.append(line_number)
                         else:
-                            pyXY_selectors_lint.append(selector_line)
-                            pyXY_lines_lint.append(line_number)
+                            python_selectors_lint.append(selector_line)
+                            python_lines_lint.append(line_number)
         if bad_selectors:
             lints.append(
                 "Selectors are suggested to take a "
                 "``<two spaces>#<one space>[<expression>]`` form."
                 f" See lines {bad_lines}"
             )
-        if pyXY_selectors_hint:
+        if python_selectors_hint:
             hints.append(
                 "Old-style Python selectors (py27, py34, py35, py36) are "
                 "deprecated. Instead, consider using the int ``py``. For "
-                f"example: ``# [py>=36]``. See lines {pyXY_lines_hint}"
+                f"example: ``# [py>=36]``. See lines {python_lines_hint}"
             )
-        if pyXY_selectors_lint:
+        if python_selectors_lint:
             lints.append(
                 "Old-style Python selectors (py27, py35, etc) are only available "
                 "for Python 2.7, 3.4, 3.5, and 3.6. Please use explicit comparisons "
                 "with the integer ``py``, e.g. ``# [py==37]`` or ``# [py>=37]``. "
-                f"See lines {pyXY_lines_lint}"
+                f"See lines {python_lines_lint}"
             )
 
     # 7: The build section should have a build number.
@@ -490,12 +492,13 @@ def lintify_meta_yaml(
                         break
 
     # 19: check version
-    if package_section.get("version") is not None:
-        ver = str(package_section.get("version"))
+    if (version := package_section.get("version")) is not None:
         try:
-            VersionOrder(ver)
-        except:
-            lints.append(f"Package version {ver} doesn't match conda spec")
+            VersionOrder(str(version))
+        except InvalidVersionSpec as e:
+            lints.append(
+                f"Package version {version} doesn't match conda spec: {e}"
+            )
 
     # 20: Jinja2 variable definitions should be nice.
     if recipe_dir is not None and os.path.exists(meta_fname):
@@ -616,14 +619,14 @@ def lintify_meta_yaml(
                 for m in JINJA_VAR_PAT.finditer(line):
                     if m.group(1) is not None:
                         var = m.group(1)
-                        if var != " %s " % var.strip():
+                        if var != f" {var.strip()} ":
                             bad_vars.append(m.group(1).strip())
                             bad_lines.append(i + 1)
         if bad_vars:
             hints.append(
                 "Jinja2 variable references are suggested to "
                 "take a ``{{<one space><variable name><one space>}}``"
-                " form. See lines %s." % (bad_lines,)
+                f" form. See lines {bad_lines}."
             )
 
     # 25: require a lower bound on python version
@@ -778,7 +781,7 @@ def lintify_meta_yaml(
                 )
 
     if shellcheck_enabled and shutil.which("shellcheck") and shell_scripts:
-        MAX_SHELLCHECK_LINES = 50
+        max_shellcheck_lines = 50
         cmd = [
             "shellcheck",
             "--enable=all",
@@ -811,10 +814,10 @@ def lintify_meta_yaml(
                 + " recipe/*.sh -f diff | git apply' helps)"
             )
             hints.extend(findings[:50])
-            if len(findings) > MAX_SHELLCHECK_LINES:
+            if len(findings) > max_shellcheck_lines:
                 hints.append(
                     "Output restricted, there are '%s' more lines."
-                    % (len(findings) - MAX_SHELLCHECK_LINES)
+                    % (len(findings) - max_shellcheck_lines)
                 )
         elif p.returncode != 0:
             # Something went wrong.
@@ -833,12 +836,12 @@ def lintify_meta_yaml(
         parsed_licenses_with_exception = licensing.license_symbols(
             license.strip(), decompose=False
         )
-        for l in parsed_licenses_with_exception:
-            if isinstance(l, license_expression.LicenseWithExceptionSymbol):
-                parsed_licenses.append(l.license_symbol.key)
-                parsed_exceptions.append(l.exception_symbol.key)
+        for li in parsed_licenses_with_exception:
+            if isinstance(li, license_expression.LicenseWithExceptionSymbol):
+                parsed_licenses.append(li.license_symbol.key)
+                parsed_exceptions.append(li.exception_symbol.key)
             else:
-                parsed_licenses.append(l.key)
+                parsed_licenses.append(li.key)
     except license_expression.ExpressionError:
         parsed_licenses = [license]
 
@@ -850,12 +853,12 @@ def lintify_meta_yaml(
 
     with open(os.path.join(os.path.dirname(__file__), "licenses.txt")) as f:
         expected_licenses = f.readlines()
-        expected_licenses = set([l.strip() for l in expected_licenses])
+        expected_licenses = set([li.strip() for li in expected_licenses])
     with open(
         os.path.join(os.path.dirname(__file__), "license_exceptions.txt")
     ) as f:
         expected_exceptions = f.readlines()
-        expected_exceptions = set([l.strip() for l in expected_exceptions])
+        expected_exceptions = set([li.strip() for li in expected_exceptions])
     if set(filtered_licenses) - expected_licenses:
         hints.append(
             "License is not an SPDX identifier (or a custom LicenseRef) nor an SPDX license expression.\n\n"
@@ -1292,7 +1295,7 @@ def jinja_lines(lines):
             yield line, i
 
 
-def _format_validation_msg(error: "jsonschema.ValidationError"):
+def _format_validation_msg(error: jsonschema.ValidationError):
     """Use the data on the validation error to generate improved reporting.
 
     If available, get the help URL from the first level of the JSON path:

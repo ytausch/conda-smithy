@@ -260,7 +260,7 @@ MACOSX_SDK_VERSION:         # [osx]
             assert any(h.startswith(exp_hint) for h in hints)
 
 
-class Test_linter(unittest.TestCase):
+class TestLinter(unittest.TestCase):
     def test_pin_compatible_in_run_exports(self):
         meta = {
             "package": {
@@ -535,10 +535,12 @@ class Test_linter(unittest.TestCase):
             assert_selector("name: foo_py3  #[py3k]", is_good=False)
             assert_selector("name: foo_py3 # [py3k]", is_good=False)
 
-    def test_pyXY_selectors(self):
+    def test_python_selectors(self):
         with tmp_directory() as recipe_dir:
 
-            def assert_pyXY_selector(meta_string, is_good=False, kind="lint"):
+            def assert_python_selector(
+                meta_string, is_good=False, kind="lint"
+            ):
                 assert kind in ("lint", "hint")
                 if kind == "hint":
                     expected_start = "Old-style Python selectors (py27, py34, py35, py36) are deprecated"
@@ -564,7 +566,7 @@ class Test_linter(unittest.TestCase):
                     message,
                 )
 
-            assert_pyXY_selector(
+            assert_python_selector(
                 """
                             build:
                               noarch: python
@@ -573,7 +575,7 @@ class Test_linter(unittest.TestCase):
                             """,
                 kind="hint",
             )
-            assert_pyXY_selector(
+            assert_python_selector(
                 """
                             build:
                               noarch: python
@@ -582,7 +584,7 @@ class Test_linter(unittest.TestCase):
                             """,
                 kind="lint",
             )
-            assert_pyXY_selector(
+            assert_python_selector(
                 """
                             build:
                               noarch: python
@@ -591,7 +593,7 @@ class Test_linter(unittest.TestCase):
                             """,
                 kind="lint",
             )
-            assert_pyXY_selector(
+            assert_python_selector(
                 """
                             build:
                               noarch: python
@@ -600,7 +602,7 @@ class Test_linter(unittest.TestCase):
                             """,
                 kind="hint",
             )
-            assert_pyXY_selector(
+            assert_python_selector(
                 """
                             build:
                               noarch: python
@@ -609,7 +611,7 @@ class Test_linter(unittest.TestCase):
                             """,
                 kind="lint",
             )
-            assert_pyXY_selector(
+            assert_python_selector(
                 """
                             build:
                               noarch: python
@@ -618,7 +620,7 @@ class Test_linter(unittest.TestCase):
                             """,
                 kind="lint",
             )
-            assert_pyXY_selector(
+            assert_python_selector(
                 """
                             build:
                               noarch: python
@@ -627,7 +629,7 @@ class Test_linter(unittest.TestCase):
                             """,
                 kind="lint",
             )
-            assert_pyXY_selector(
+            assert_python_selector(
                 """
                             build:
                               noarch: python
@@ -636,7 +638,7 @@ class Test_linter(unittest.TestCase):
                             """,
                 kind="lint",
             )
-            assert_pyXY_selector(
+            assert_python_selector(
                 """
                             build:
                               noarch: python
@@ -882,7 +884,7 @@ class Test_linter(unittest.TestCase):
                            version: {{ version }}
                          """
                 )
-            lints = linter.main(recipe_dir)
+            linter.main(recipe_dir)
 
     def test_jinja_load_file_regex(self):
         # Test that we can use load_file_regex in a recipe. We don't care about
@@ -906,7 +908,7 @@ class Test_linter(unittest.TestCase):
                           version: {{ version }}
                         """
                 )
-            lints = linter.main(recipe_dir)
+            linter.main(recipe_dir)
 
     def test_jinja_load_file_data(self):
         # Test that we can use load_file_data in a recipe. We don't care about
@@ -923,7 +925,7 @@ class Test_linter(unittest.TestCase):
                           version: {{ version }}
                         """
                 )
-            lints = linter.main(recipe_dir)
+            linter.main(recipe_dir)
 
     def test_jinja_load_setup_py_data(self):
         # Test that we can use load_setup_py_data in a recipe. We don't care about
@@ -940,7 +942,7 @@ class Test_linter(unittest.TestCase):
                           version: {{ version }}
                         """
                 )
-            lints = linter.main(recipe_dir)
+            linter.main(recipe_dir)
 
     def test_jinja_load_str_data(self):
         # Test that we can use load_str_data in a recipe. We don't care about
@@ -957,7 +959,7 @@ class Test_linter(unittest.TestCase):
                           version: {{ version }}
                         """
                 )
-            lints = linter.main(recipe_dir)
+            linter.main(recipe_dir)
 
     def test_jinja_os_sep(self):
         # Test that we can use os.sep in a recipe.
@@ -972,7 +974,7 @@ class Test_linter(unittest.TestCase):
                           script: {{ os.sep }}
                          """
                 )
-            lints = linter.main(recipe_dir)
+            linter.main(recipe_dir)
 
     def test_target_platform(self):
         # Test that we can use target_platform in a recipe. We don't care about
@@ -986,7 +988,7 @@ class Test_linter(unittest.TestCase):
                            version: 1.0
                          """
                 )
-            lints = linter.main(recipe_dir)
+            linter.main(recipe_dir)
 
     def test_missing_build_number(self):
         expected_message = "The recipe must have a `build/number` section."
@@ -1660,7 +1662,7 @@ class Test_linter(unittest.TestCase):
 
 
 @pytest.mark.cli
-class TestCLI_recipe_lint(unittest.TestCase):
+class TestCliRecipeLint(unittest.TestCase):
     def test_cli_fail(self):
         with tmp_directory() as recipe_dir:
             with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:

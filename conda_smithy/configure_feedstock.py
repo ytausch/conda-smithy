@@ -20,11 +20,6 @@ from pathlib import Path, PurePath
 import requests
 import yaml
 
-try:
-    from builtins import ExceptionGroup
-except ImportError:
-    pass
-
 # The `requests` lib uses `simplejson` instead of `json` when available.
 # In consequence the same JSON library must be used or the `JSONDecodeError`
 # used when catching an exception won't be the same as the one raised
@@ -1025,8 +1020,7 @@ def _render_ci_provider(
                 raise RuntimeError(
                     "Travis CI can only be used for 'linux_aarch64', "
                     "'linux_ppc64le' or 'linux_s390x' native builds"
-                    ", not '%s_%s', to avoid using open-source build minutes!"
-                    % (platform, arch)
+                    f", not '{platform}_{arch}', to avoid using open-source build minutes!"
                 )
 
         # AFAIK there is no way to get conda build to ignore the CBC yaml
@@ -1471,19 +1465,15 @@ def _render_template_exe_files(
                 if old_file_contents != new_file_contents:
                     import difflib
 
-                    logger.debug(
-                        "diff:\n%s"
-                        % (
-                            "\n".join(
-                                difflib.unified_diff(
-                                    old_file_contents.splitlines(),
-                                    new_file_contents.splitlines(),
-                                    fromfile=target_fname,
-                                    tofile=target_fname,
-                                )
-                            )
+                    diff_text = "\n".join(
+                        difflib.unified_diff(
+                            old_file_contents.splitlines(),
+                            new_file_contents.splitlines(),
+                            fromfile=target_fname,
+                            tofile=target_fname,
                         )
                     )
+                    logger.debug(f"diff:\n{diff_text}")
                     raise RuntimeError(
                         f"Same file {target_fname} is rendered twice with different contents"
                     )
@@ -1966,7 +1956,7 @@ def azure_build_id_from_public(forge_config):
     forge_config["azure"]["build_id"] = build_def["id"]
 
 
-def render_README(jinja_env, forge_config, forge_dir, render_info=None):
+def render_readme(jinja_env, forge_config, forge_dir, render_info=None):
     if "README.md" in forge_config["skip_render"]:
         logger.info("README.md rendering is skipped")
         return
@@ -2427,7 +2417,7 @@ def get_cfp_file_path(temporary_directory):
     else:
         raise RuntimeError(
             "Could not determine proper conda package extension for "
-            "pinning package '%s'!" % pkg.url
+            f"pinning package '{pkg.url}'!"
         )
     dest = os.path.join(
         temporary_directory, f"conda-forge-pinning-{ pkg.version }{ext}"
@@ -2742,7 +2732,7 @@ def main(
     tmp = render_info[0]
     render_info[0] = render_info[azure_ind]
     render_info[azure_ind] = tmp
-    render_README(env, config, forge_dir, render_info)
+    render_readme(env, config, forge_dir, render_info)
 
     logger.debug("README rendered")
 

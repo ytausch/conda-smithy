@@ -68,17 +68,15 @@ drone_default_endpoint = "https://cloud.drone.io"
 class LiveServerSession(requests.Session):
     """Utility class to avoid typing out urls all the time"""
 
-    def __init__(self, prefix_url=None, *args, **kwargs):
-        super(LiveServerSession, self).__init__(*args, **kwargs)
+    def __init__(self, prefix_url=None):
+        super().__init__()
         self.prefix_url = prefix_url
 
     def request(self, method, url, *args, **kwargs):
         from urllib.parse import urljoin
 
         url = urljoin(self.prefix_url, url)
-        return super(LiveServerSession, self).request(
-            method, url, *args, **kwargs
-        )
+        return super().request(method, url, *args, **kwargs)
 
 
 def travis_headers():
@@ -314,7 +312,7 @@ def travis_wait_until_synced(ignore=False):
         content = response.json()
         print(".", end="")
         sys.stdout.flush()
-        if "is_syncing" in content and content["is_syncing"] == False:
+        if "is_syncing" in content and content["is_syncing"] is False:
             break
         time.sleep(6)
     else:
