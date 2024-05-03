@@ -49,9 +49,7 @@ select = [
     # pypugrade
     "UP",
 ]
-
-[tool.ruff.isort]
-known-first-party = ["conda_smithy"]
+isort.known-first-party = ["conda_smithy"]
 
 [tool.pytest.ini_options]
 norecursedirs = [

@@ -28,20 +28,18 @@ def get_repo_root(path):
 
 
 def set_exe_file(filename, set_exe=True):
-    IXALL = stat.S_IXOTH | stat.S_IXGRP | stat.S_IXUSR
+    all_execute_permissions = stat.S_IXOTH | stat.S_IXGRP | stat.S_IXUSR
 
     repo = get_repo(filename)
     if repo:
         mode = "+x" if set_exe else "-x"
-        repo.git.execute(
-            ["git", "update-index", "--chmod=%s" % mode, filename]
-        )
+        repo.git.execute(["git", "update-index", f"--chmod={mode}", filename])
 
     mode = os.stat(filename).st_mode
     if set_exe:
-        mode |= IXALL
+        mode |= all_execute_permissions
     else:
-        mode -= mode & IXALL
+        mode -= mode & all_execute_permissions
     os.chmod(filename, mode)
 
 

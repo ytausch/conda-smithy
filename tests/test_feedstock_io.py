@@ -69,8 +69,7 @@ class TestFeedstockIO(unittest.TestCase):
                 possible_repo_subdir = os.path.join(
                     tmp_dir,
                     "".join(
-                        "%s%s"
-                        % (x, os.path.sep if random.random() > 0.5 else "")
+                        f"{x}{os.path.sep if random.random() > 0.5 else ''}"
                         for x in string.ascii_lowercase
                     ),
                 )

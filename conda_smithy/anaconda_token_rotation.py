@@ -88,10 +88,7 @@ def rotate_anaconda_token(
                         if "DEBUG_ANACONDA_TOKENS" in os.environ:
                             raise e
                         else:
-                            err_msg = (
-                                "Failed to rotate token for %s/%s"
-                                " on circle!"
-                            ) % (user, project)
+                            err_msg = f"Failed to rotate token for {user}/{project} on circle!"
                             failed = True
                             raise RuntimeError(err_msg)
 
@@ -110,9 +107,9 @@ def rotate_anaconda_token(
                                 raise e
                             else:
                                 err_msg = (
-                                    "Failed to rotate token for %s/%s"
-                                    " on drone endpoint %s!"
-                                ) % (user, project, drone_endpoint)
+                                    f"Failed to rotate token for {user}/{project} on drone endpoint "
+                                    f"{drone_endpoint}!"
+                                )
                                 failed = True
                                 raise RuntimeError(err_msg)
 
@@ -129,10 +126,7 @@ def rotate_anaconda_token(
                         if "DEBUG_ANACONDA_TOKENS" in os.environ:
                             raise e
                         else:
-                            err_msg = (
-                                "Failed to rotate token for %s/%s"
-                                " on travis!"
-                            ) % (user, project)
+                            err_msg = f"Failed to rotate token for {user}/{project} on travis!"
                             failed = True
                             raise RuntimeError(err_msg)
 
@@ -145,9 +139,7 @@ def rotate_anaconda_token(
                         if "DEBUG_ANACONDA_TOKENS" in os.environ:
                             raise e
                         else:
-                            err_msg = (
-                                "Failed to rotate token for %s/%s" " on azure!"
-                            ) % (user, project)
+                            err_msg = f"Failed to rotate token for {user}/{project} on azure!"
                             failed = True
                             raise RuntimeError(err_msg)
 
@@ -160,10 +152,7 @@ def rotate_anaconda_token(
                         if "DEBUG_ANACONDA_TOKENS" in os.environ:
                             raise e
                         else:
-                            err_msg = (
-                                "Failed to rotate token for %s/%s"
-                                " on appveyor!"
-                            ) % (user, project)
+                            err_msg = f"Failed to rotate token for {user}/{project} on appveyor!"
                             failed = True
                             raise RuntimeError(err_msg)
 
@@ -176,10 +165,7 @@ def rotate_anaconda_token(
                         if "DEBUG_ANACONDA_TOKENS" in os.environ:
                             raise e
                         else:
-                            err_msg = (
-                                "Failed to rotate token for %s/%s"
-                                " on github actions!"
-                            ) % (user, project)
+                            err_msg = f"Failed to rotate token for {user}/{project} on github actions!"
                             failed = True
                             raise RuntimeError(err_msg)
 
@@ -193,12 +179,9 @@ def rotate_anaconda_token(
             raise RuntimeError(err_msg)
         else:
             raise RuntimeError(
-                (
-                    "Rotating the feedstock token in providers for %s/%s failed!"
-                    " Try the command locally with DEBUG_ANACONDA_TOKENS"
-                    " defined in the environment to investigate!"
-                )
-                % (user, project)
+                f"Rotating the feedstock token in providers for {user}/{project} failed!"
+                " Try the command locally with DEBUG_ANACONDA_TOKENS"
+                " defined in the environment to investigate!"
             )
 
 
@@ -229,7 +212,7 @@ def rotate_token_in_circle(user, project, binstar_token, token_name):
                 token=circle_token,
                 user=user,
                 project=project,
-                extra="/%s" % token_name,
+                extra=f"/{token_name}",
             )
         )
         if r.status_code != 200:
@@ -370,8 +353,7 @@ def rotate_token_in_azure(user, project, binstar_token, token_name):
         ed = existing_definitions[0]
     else:
         raise RuntimeError(
-            "Cannot add %s to a repo that is not already registerd on azure CI!"
-            % token_name
+            f"Cannot add {token_name} to a repo that is not already registered on azure CI!"
         )
 
     ed = bclient.get_definition(ed.id, project=config.project_name)
