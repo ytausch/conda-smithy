@@ -866,9 +866,12 @@ def test_forge_yml_alt_path(config_yaml):
     os.rename(forge_yml, forge_yml_alt)
 
     with pytest.raises(RuntimeError):
-        _load_forge_config(None)
+        _load_forge_config(config_yaml, None)
 
-    assert _load_forge_config(forge_yml_alt)["recipe_dir"] == "recipe"
+    assert (
+        _load_forge_config(config_yaml, forge_yml_alt)["recipe_dir"]
+        == "recipe"
+    )
 
 
 def test_cos7_env_render(py_recipe, jinja_env):
