@@ -2749,7 +2749,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description=("Configure a feedstock given " "a conda-forge.yml file.")
+        description="Configure a feedstock given a conda-forge.yml file."
     )
     parser.add_argument(
         "forge_file_directory",
