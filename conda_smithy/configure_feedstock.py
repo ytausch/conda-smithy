@@ -872,10 +872,9 @@ def _conda_build_api_render_for_smithy(
     """
 
     from conda.exceptions import NoPackagesFoundError
-
+    from conda_build.config import get_or_merge_config
     from conda_build.exceptions import DependencyNeedsBuildingError
     from conda_build.render import finalize_metadata, render_recipe
-    from conda_build.config import get_or_merge_config
 
     config = get_or_merge_config(config, **kwargs)
 

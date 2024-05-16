@@ -141,7 +141,7 @@ def test_osx_noarch_hint(where):
     avoid_message = "You're setting a constraint on the `__osx` virtual"
 
     with tmp_directory() as recipe_dir:
-        with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+        with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
             fh.write(
                 f"""
                 package:
@@ -250,7 +250,7 @@ MACOSX_SDK_VERSION:         # [osx]
         # run the linter
         _, hints = linter.main(rdir, return_hints=True)
         # show CBC/hints for debugging
-        with open(os.path.join(rdir, "conda_build_config.yaml"), "r") as fh:
+        with open(os.path.join(rdir, "conda_build_config.yaml")) as fh:
             print("".join(fh.readlines()))
             print(hints)
         # validate against expectations
