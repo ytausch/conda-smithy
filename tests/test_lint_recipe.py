@@ -99,6 +99,7 @@ def test_stdlib_hints_multi_output():
                 """
                 package:
                    name: foo
+                   version: '1.0.0'
                 requirements:
                   build:
                     - {{ compiler("c") }}
