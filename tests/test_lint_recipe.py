@@ -1473,7 +1473,7 @@ class TestLinter(unittest.TestCase):
             "Package version 2.0.0~alpha0 doesn't match conda spec"
         )
         lints, hints = linter.lintify_meta_yaml(meta)
-        assert any(expected_message in lint for lint in lints)
+        assert any(lint.startswith(expected_message) for lint in lints)
 
     @unittest.skipUnless(is_gh_token_set(), "GH_TOKEN not set")
     def test_examples(self):
