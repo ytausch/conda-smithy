@@ -1641,6 +1641,7 @@ class TestCliRecipeLint(unittest.TestCase):
                         """
                     package:
                         name: 'test_package'
+                        version: '1.0.0'
                     build:
                         number: 0
                     test:
@@ -1672,6 +1673,7 @@ class TestCliRecipeLint(unittest.TestCase):
                         """
                     package:
                         name: 'test_package'
+                        version: '1.0.0'
                     build:
                         number: 0
                     test:
