@@ -492,7 +492,10 @@ def lintify_meta_yaml(
                         break
 
     # 19: check version
-    if (version := package_section.get("version")) is not None:
+    version = package_section.get("version")
+    if not version:
+        lints.append("Package version is missing.")
+    else:
         try:
             VersionOrder(str(version))
         except InvalidVersionSpec as e:
