@@ -93,10 +93,8 @@ def test_osx_hint(where):
 
 
 def test_stdlib_hints_multi_output():
-    expected_message = "You're setting a requirement on sysroot"
-
     with tmp_directory() as recipe_dir:
-        with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+        with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
             fh.write(
                 """
                 package:
@@ -1822,11 +1820,11 @@ def test_lint_no_builds():
     with tmp_directory() as feedstock_dir:
         ci_support_dir = os.path.join(feedstock_dir, ".ci_support")
         os.makedirs(ci_support_dir, exist_ok=True)
-        with io.open(os.path.join(ci_support_dir, "README"), "w") as fh:
+        with open(os.path.join(ci_support_dir, "README"), "w") as fh:
             fh.write("blah")
         recipe_dir = os.path.join(feedstock_dir, "recipe")
         os.makedirs(recipe_dir, exist_ok=True)
-        with io.open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
+        with open(os.path.join(recipe_dir, "meta.yaml"), "w") as fh:
             fh.write(
                 """
                 package:
@@ -1837,7 +1835,7 @@ def test_lint_no_builds():
         lints = linter.main(recipe_dir, conda_forge=True)
         assert any(lint.startswith(expected_message) for lint in lints)
 
-        with io.open(os.path.join(ci_support_dir, "blah.yaml"), "w") as fh:
+        with open(os.path.join(ci_support_dir, "blah.yaml"), "w") as fh:
             fh.write("blah")
 
         lints = linter.main(recipe_dir, conda_forge=True)

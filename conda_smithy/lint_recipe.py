@@ -695,7 +695,7 @@ def lintify_meta_yaml(
     pure_python_wheel_re = re.compile(r".*[:-]\s+(http.*-none-any\.whl)\s+.*")
     wheel_re = re.compile(r".*[:-]\s+(http.*\.whl)\s+.*")
     if recipe_dir is not None and os.path.exists(meta_fname):
-        with open(meta_fname, "rt") as f:
+        with open(meta_fname) as f:
             for line in f:
                 if match := pure_python_wheel_re.search(line):
                     pure_python_wheel_urls.append(match.group(1))
