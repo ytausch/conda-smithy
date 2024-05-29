@@ -4,6 +4,58 @@ conda-smithy Change Log
 
 .. current developments
 
+v3.36.1
+====================
+
+**Added:**
+
+* Enable Dependabot for Github Actions workflows and templates. (#1930)
+* Lint / hint if a recipe uses Python wheels as its source. (#1935 via #1936)
+
+**Changed:**
+
+* Lint all outputs for required stdlib-fixes. (#1941)
+* Make recommended changes to Travis CI template. (#1942)
+
+**Fixed:**
+
+* Avoid linter failing on more complicated selector patterns in `conda_build_config.yaml`. (#1939)
+
+**Authors:**
+
+* Matthew R. Becker
+* Jaime Rodríguez-Guerra
+* H. Vetinari
+* Uwe L. Korn
+* Mervin Fansler
+* dependabot[bot]
+
+
+
+v3.36.0
+====================
+
+**Added:**
+
+* Added new lint for no ``.ci_support`` files which indicates no packages being built.
+
+**Changed:**
+
+* Provide linter hints if macOS quantities are misconfigured in `conda_build_config.yaml` (#1929)
+
+**Fixed:**
+
+* Ensure MACOSX_SDK_VERSION does not end up lower than `c_stdlib_version` in variant configs (#1927 via #1928)
+* Only mark the toplevel LICENSE and README as generated files
+
+**Authors:**
+
+* Matthew R. Becker
+* H. Vetinari
+* Uwe L. Korn
+
+
+
 v3.35.1
 ====================
 
