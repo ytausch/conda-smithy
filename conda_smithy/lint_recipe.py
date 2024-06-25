@@ -29,9 +29,9 @@ from conda_build.metadata import (
 from conda_build.metadata import (
     ensure_valid_license_family,
 )
+from ruamel.yaml import CommentedSeq
 
 from conda_smithy.validate_schema import validate_json_schema
-from ruamel.yaml import CommentedSeq
 
 from .utils import get_yaml, render_meta_yaml
 
