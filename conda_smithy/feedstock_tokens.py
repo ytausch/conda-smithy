@@ -83,7 +83,7 @@ def generate_and_write_feedstock_token(user, project, provider=None):
             pth = feedstock_token_local_path(user, project, provider=provider)
             if os.path.exists(pth):
                 failed = True
-                provider_or_empty = "" if provider is None else " " + provider
+                provider_or_empty = "" if provider is None else f" {provider}"
                 err_msg = f"Token for {user}/{project} on provider{provider_or_empty} is already written locally!"
                 raise FeedstockTokenError(err_msg)
 
@@ -100,7 +100,7 @@ def generate_and_write_feedstock_token(user, project, provider=None):
         if err_msg:
             raise FeedstockTokenError(err_msg)
         else:
-            provider_or_empty = "" if provider is None else " " + provider
+            provider_or_empty = "" if provider is None else f" {provider}"
             raise FeedstockTokenError(
                 f"Generating the feedstock token for {user}/{project} on provider{provider_or_empty} failed!"
                 " Try the command locally with DEBUG_FEEDSTOCK_TOKENS"
@@ -194,7 +194,7 @@ def feedstock_token_exists(user, project, token_repo, provider=None):
         if err_msg:
             raise FeedstockTokenError(err_msg)
         else:
-            provider_or_empty = "" if provider is None else " " + provider
+            provider_or_empty = "" if provider is None else f" {provider}"
             raise FeedstockTokenError(
                 f"Testing for the feedstock token for {user}/{project} on provider{provider_or_empty} failed!"
                 " Try the command locally with DEBUG_FEEDSTOCK_TOKENS"
@@ -275,7 +275,7 @@ def is_valid_feedstock_token(
         if err_msg:
             raise FeedstockTokenError(err_msg)
         else:
-            provider_or_empty = "" if provider is None else " " + provider
+            provider_or_empty = "" if provider is None else f" {provider}"
             raise FeedstockTokenError(
                 f"Validating the feedstock token for {user}/{project} on provider{provider_or_empty} failed!"
                 " Try the command locally with DEBUG_FEEDSTOCK_TOKENS"
@@ -355,7 +355,7 @@ def register_feedstock_token(user, project, token_repo, provider=None):
 
             # push
             repo.index.add(token_file)
-            provider_or_empty = "" if provider is None else " " + provider
+            provider_or_empty = "" if provider is None else f" {provider}"
             repo.index.commit(
                 "[ci skip] [skip ci] [cf admin skip] ***NO_CI*** "
                 f"added token for {user}/{project} on provider{provider_or_empty}"
@@ -371,7 +371,7 @@ def register_feedstock_token(user, project, token_repo, provider=None):
         if err_msg:
             raise FeedstockTokenError(err_msg)
         else:
-            provider_or_empty = "" if provider is None else " " + provider
+            provider_or_empty = "" if provider is None else f" {provider}"
             raise FeedstockTokenError(
                 f"Registering the feedstock token for {user}/{project} on provider{provider_or_empty} failed!"
                 " Try the command locally with DEBUG_FEEDSTOCK_TOKENS"
