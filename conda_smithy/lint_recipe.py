@@ -31,6 +31,7 @@ from conda_build.metadata import (
 )
 
 from conda_smithy.validate_schema import validate_json_schema
+from ruamel.yaml import CommentedSeq
 
 from .utils import get_yaml, render_meta_yaml
 
@@ -724,6 +725,22 @@ def lintify_meta_yaml(
                 "This is discouraged. Please consider using a source distribution (sdist) instead."
             )
 
+    # 28: Check that Rust licenses are bundled.
+    if build_reqs and ("{{ compiler('rust') }}" in build_reqs):
+        if "cargo-bundle-licenses" not in build_reqs:
+            lints.append(
+                "Rust packages must include the licenses of the Rust dependencies. "
+                "For more info, visit: https://conda-forge.org/docs/maintainer/adding_pkgs/#rust"
+            )
+
+    # 29: Check that go licenses are bundled.
+    if build_reqs and ("{{ compiler('go') }}" in build_reqs):
+        if "go-licenses" not in build_reqs:
+            lints.append(
+                "Go packages must include the licenses of the Go dependencies. "
+                "For more info, visit: https://conda-forge.org/docs/maintainer/adding_pkgs/#go"
+            )
+
     # hints
     # 1: suggest pip
     if "script" in build_section:
@@ -891,6 +908,12 @@ def lintify_meta_yaml(
     )
     outputs = get_section(meta, "outputs", lints)
     output_reqs = [x.get("requirements", {}) for x in outputs]
+
+    # deal with cb2 recipes (no build/host/run distinction)
+    output_reqs = [
+        {"host": x, "run": x} if isinstance(x, CommentedSeq) else x
+        for x in output_reqs
+    ]
 
     # collect output requirements
     output_build_reqs = [x.get("build", []) or [] for x in output_reqs]

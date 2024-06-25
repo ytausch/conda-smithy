@@ -121,6 +121,10 @@ def test_stdlib_hints_multi_output():
                     requirements:
                       run:
                         - __osx >=10.13
+                  # test that cb2-style requirements don't break linter
+                  - name: boing
+                    requirements:
+                      - bar
                 """
             )
 
@@ -1367,13 +1371,13 @@ class TestLinter(unittest.TestCase):
             )
 
         expected_message = (
-            "A conda package with same name (fitsio) already exists."
+            "A conda package with same name (numpy) already exists."
         )
         lints, hints = linter.lintify_meta_yaml(
             {
                 "package": {"name": "this-will-never-exist"},
                 "source": {
-                    "url": "https://pypi.io/packages/source/f/fitsio/fitsio-v0.9.2.tar.gz"
+                    "url": "https://pypi.io/packages/source/n/numpy/numpy-1.26.4.tar.gz"
                 },
             },
             recipe_dir="recipes/foo",
@@ -1387,7 +1391,7 @@ class TestLinter(unittest.TestCase):
                 "package": {"name": "this-will-never-exist"},
                 "source": {
                     "url": [
-                        "https://pypi.io/packages/source/f/fitsio/fitsio-v0.9.2.tar.gz"
+                        "https://pypi.io/packages/source/n/numpy/numpy-1.26.4.tar.gz"
                     ]
                 },
             },
@@ -1659,6 +1663,50 @@ class TestLinter(unittest.TestCase):
         expected = "Recipes should usually depend on `matplotlib-base`"
         self.assertTrue(any(hint.startswith(expected) for hint in hints))
 
+    def test_rust_license_bundling(self):
+        # Case where cargo-bundle-licenses is missing
+        meta_missing_license = {
+            "requirements": {"build": ["{{ compiler('rust') }}"]},
+        }
+
+        lints, hints = linter.lintify_meta_yaml(meta_missing_license)
+        expected_msg = (
+            "Rust packages must include the licenses of the Rust dependencies. "
+            "For more info, visit: https://conda-forge.org/docs/maintainer/adding_pkgs/#rust"
+        )
+        self.assertIn(expected_msg, lints)
+
+        # Case where cargo-bundle-licenses is present
+        meta_with_license = {
+            "requirements": {
+                "build": ["{{ compiler('rust') }}", "cargo-bundle-licenses"]
+            },
+        }
+
+        lints, hints = linter.lintify_meta_yaml(meta_with_license)
+        self.assertNotIn(expected_msg, lints)
+
+    def test_go_license_bundling(self):
+        # Case where go-licenses is missing
+        meta_missing_license = {
+            "requirements": {"build": ["{{ compiler('go') }}"]},
+        }
+
+        lints, hints = linter.lintify_meta_yaml(meta_missing_license)
+        expected_msg = (
+            "Go packages must include the licenses of the Go dependencies. "
+            "For more info, visit: https://conda-forge.org/docs/maintainer/adding_pkgs/#go"
+        )
+        self.assertIn(expected_msg, lints)
+
+        # Case where go-licenses is present
+        meta_with_license = {
+            "requirements": {"build": ["{{ compiler('go') }}", "go-licenses"]},
+        }
+
+        lints, hints = linter.lintify_meta_yaml(meta_with_license)
+        self.assertNotIn(expected_msg, lints)
+
 
 @pytest.mark.cli
 class TestCliRecipeLint(unittest.TestCase):
@@ -1815,6 +1863,7 @@ class TestCliRecipeLint(unittest.TestCase):
             assert_jinja('{% set version= "0.27.3"%}', is_good=False)
 
 
+@unittest.skipUnless(is_gh_token_set(), "GH_TOKEN not set")
 def test_lint_no_builds():
     expected_message = "The feedstock has no `.ci_support` files and "
 
